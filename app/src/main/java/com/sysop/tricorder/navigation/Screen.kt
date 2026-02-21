@@ -3,6 +3,7 @@ package com.sysop.tricorder.navigation
 import com.sysop.tricorder.core.model.SensorCategory
 
 sealed class Screen(val route: String) {
+    data object Permissions : Screen("permissions")
     data object Map : Screen("map")
     data class Detail(val category: SensorCategory) : Screen("detail/${category.name}")
     data object Sessions : Screen("sessions")

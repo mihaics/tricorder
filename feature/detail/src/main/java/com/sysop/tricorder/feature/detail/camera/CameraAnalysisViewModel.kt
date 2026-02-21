@@ -20,8 +20,8 @@ class CameraAnalysisViewModel @Inject constructor() : ViewModel() {
     private val _avgB = MutableStateFlow(0.0)
     val avgB: StateFlow<Double> = _avgB.asStateFlow()
 
-    private val _isPpgMode = MutableStateFlow(false)
-    val isPpgMode: StateFlow<Boolean> = _isPpgMode.asStateFlow()
+    private val _useFrontCamera = MutableStateFlow(false)
+    val useFrontCamera: StateFlow<Boolean> = _useFrontCamera.asStateFlow()
 
     fun updateColorAnalysis(r: Double, g: Double, b: Double, brightness: Double) {
         _avgR.value = r
@@ -30,7 +30,7 @@ class CameraAnalysisViewModel @Inject constructor() : ViewModel() {
         _brightness.value = brightness
     }
 
-    fun togglePpgMode() {
-        _isPpgMode.update { !it }
+    fun toggleCamera() {
+        _useFrontCamera.update { !it }
     }
 }

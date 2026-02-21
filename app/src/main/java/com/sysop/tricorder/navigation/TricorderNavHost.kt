@@ -1,6 +1,9 @@
 package com.sysop.tricorder.navigation
 
+import android.content.pm.PackageManager
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,19 +19,37 @@ import com.sysop.tricorder.feature.detail.environment.BarometerScreen
 import com.sysop.tricorder.feature.detail.gnss.GnssSkyPlotScreen
 import com.sysop.tricorder.feature.detail.motion.MotionScreen
 import com.sysop.tricorder.feature.detail.rf.RfScannerScreen
+import com.sysop.tricorder.permission.PermissionManager
 import com.sysop.tricorder.feature.map.MapScreen
 import com.sysop.tricorder.feature.session.list.SessionListScreen
 import com.sysop.tricorder.feature.session.replay.SessionReplayScreen
 import com.sysop.tricorder.feature.settings.SettingsScreen
+import com.sysop.tricorder.permission.PermissionScreen
 
 @Composable
 fun TricorderNavHost(
     navController: NavHostController = rememberNavController(),
 ) {
+    val context = LocalContext.current
+    val allGranted = PermissionManager.allPermissions().all { permission ->
+        ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+    }
+    val startDestination = if (allGranted) Screen.Map.route else Screen.Permissions.route
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Map.route,
+        startDestination = startDestination,
     ) {
+        composable(Screen.Permissions.route) {
+            PermissionScreen(
+                onAllGranted = {
+                    navController.navigate(Screen.Map.route) {
+                        popUpTo(Screen.Permissions.route) { inclusive = true }
+                    }
+                },
+            )
+        }
+
         composable(Screen.Map.route) {
             MapScreen(
                 onNavigateToDetail = { category ->

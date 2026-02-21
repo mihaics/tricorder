@@ -15,39 +15,56 @@ class ColorAnalyzer(
         }
 
         val yBuffer = image.planes[0].buffer
+        val uBuffer = image.planes[1].buffer
+        val vBuffer = image.planes[2].buffer
         val width = image.width
         val height = image.height
+        val yRowStride = image.planes[0].rowStride
+        val uvRowStride = image.planes[1].rowStride
+        val uvPixelStride = image.planes[1].pixelStride
 
-        // Sample center region (middle 1/4 of the image)
+        // Sample center region (middle 1/4), every 8th pixel for speed
         val startX = width / 4
         val endX = width * 3 / 4
         val startY = height / 4
         val endY = height * 3 / 4
-        val rowStride = image.planes[0].rowStride
 
+        var totalR = 0L
+        var totalG = 0L
+        var totalB = 0L
         var totalY = 0L
         var count = 0
 
-        for (y in startY until endY step 4) {
-            for (x in startX until endX step 4) {
-                val yVal = yBuffer.get(y * rowStride + x).toInt() and 0xFF
+        for (y in startY until endY step 8) {
+            for (x in startX until endX step 8) {
+                val yVal = yBuffer.get(y * yRowStride + x).toInt() and 0xFF
+                val uvX = x / 2
+                val uvY = y / 2
+                val uVal = (uBuffer.get(uvY * uvRowStride + uvX * uvPixelStride).toInt() and 0xFF) - 128
+                val vVal = (vBuffer.get(uvY * uvRowStride + uvX * uvPixelStride).toInt() and 0xFF) - 128
+
+                // YUV to RGB (BT.601)
+                val r = (yVal + 1.402 * vVal).toInt().coerceIn(0, 255)
+                val g = (yVal - 0.344136 * uVal - 0.714136 * vVal).toInt().coerceIn(0, 255)
+                val b = (yVal + 1.772 * uVal).toInt().coerceIn(0, 255)
+
+                totalR += r
+                totalG += g
+                totalB += b
                 totalY += yVal
                 count++
             }
         }
 
-        val avgBrightness = if (count > 0) totalY.toDouble() / count else 0.0
-
-        // Approximate RGB from Y (luminance only, since full YUV->RGB is expensive)
-        // For the detail view, full conversion will be done at lower frequency
-        val normalizedBrightness = avgBrightness / 255.0
-
-        onResult(
-            avgBrightness, // approximate, detail view does full conversion
-            avgBrightness,
-            avgBrightness,
-            normalizedBrightness * 100.0,
-        )
+        if (count > 0) {
+            val avgBrightness = totalY.toDouble() / count / 255.0 * 100.0
+            onResult(
+                totalR.toDouble() / count,
+                totalG.toDouble() / count,
+                totalB.toDouble() / count,
+                avgBrightness,
+            )
+        }
 
         image.close()
     }

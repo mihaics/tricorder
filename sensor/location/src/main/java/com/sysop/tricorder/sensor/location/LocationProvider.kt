@@ -63,7 +63,12 @@ class LocationProvider @Inject constructor(
             }
         }
 
-        client.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        try {
+            client.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        } catch (_: SecurityException) {
+            close()
+            return@callbackFlow
+        }
 
         // Also register for GNSS satellite status
         val gnssCallback = object : GnssStatus.Callback() {
@@ -95,11 +100,19 @@ class LocationProvider @Inject constructor(
             }
         }
 
-        locationManager?.registerGnssStatusCallback(gnssCallback, android.os.Handler(Looper.getMainLooper()))
+        try {
+            locationManager?.registerGnssStatusCallback(gnssCallback, android.os.Handler(Looper.getMainLooper()))
+        } catch (_: SecurityException) {
+            // GNSS status not available without permission, continue with location only
+        }
 
         awaitClose {
             client.removeLocationUpdates(locationCallback)
-            locationManager?.unregisterGnssStatusCallback(gnssCallback)
+            try {
+                locationManager?.unregisterGnssStatusCallback(gnssCallback)
+            } catch (_: SecurityException) {
+                // Already unregistered or never registered
+            }
         }
     }
 

@@ -76,7 +76,13 @@ class CellularProvider @Inject constructor(
             }
         }
 
-        tm.registerTelephonyCallback(executor, callback)
+        try {
+            tm.registerTelephonyCallback(executor, callback)
+        } catch (_: SecurityException) {
+            executor.shutdown()
+            close()
+            return@callbackFlow
+        }
         awaitClose {
             tm.unregisterTelephonyCallback(callback)
             executor.shutdown()

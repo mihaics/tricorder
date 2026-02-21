@@ -48,8 +48,15 @@ class BleScanProvider @Inject constructor(
             }
         }
 
-        scanner.startScan(callback)
-        awaitClose { scanner.stopScan(callback) }
+        try {
+            scanner.startScan(callback)
+        } catch (_: SecurityException) {
+            close()
+            return@callbackFlow
+        }
+        awaitClose {
+            try { scanner.stopScan(callback) } catch (_: SecurityException) {}
+        }
     }
 
     override fun mapOverlay() = MapOverlayConfig(type = OverlayType.MARKERS)

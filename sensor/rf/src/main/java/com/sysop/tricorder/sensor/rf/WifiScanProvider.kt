@@ -54,11 +54,16 @@ class WifiScanProvider @Inject constructor(
             }
         }
 
-        context.registerReceiver(
-            receiver,
-            IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
-        )
-        wm.startScan()
+        try {
+            context.registerReceiver(
+                receiver,
+                IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
+            )
+            wm.startScan()
+        } catch (_: SecurityException) {
+            close()
+            return@callbackFlow
+        }
 
         awaitClose { context.unregisterReceiver(receiver) }
     }

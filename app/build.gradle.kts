@@ -87,6 +87,9 @@ dependencies {
     // Room (for DatabaseModule)
     implementation(libs.room.runtime)
 
+    // MapLibre (for initialization in Application)
+    implementation(libs.maplibre)
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

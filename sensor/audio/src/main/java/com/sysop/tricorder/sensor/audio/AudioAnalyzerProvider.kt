@@ -10,9 +10,11 @@ import androidx.core.content.ContextCompat
 import com.sysop.tricorder.core.model.*
 import com.sysop.tricorder.core.sensorapi.SensorProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import java.time.Instant
 import javax.inject.Inject
@@ -93,7 +95,7 @@ class AudioAnalyzerProvider @Inject constructor(
         }
 
         awaitClose {}
-    }
+    }.flowOn(Dispatchers.IO)
 
     override fun mapOverlay() = MapOverlayConfig(type = OverlayType.HEATMAP)
 }
