@@ -49,8 +49,9 @@ class SessionReplayViewModel @Inject constructor(
         viewModelScope.launch {
             val session = sessionDao.getSession(sessionId) ?: return@launch
             val readings = sessionDao.getReadingsForSession(sessionId).first()
-            val durationMs = if (session.endTime != null) {
-                session.endTime - session.startTime
+            val endTime = session.endTime
+            val durationMs = if (endTime != null) {
+                endTime - session.startTime
             } else if (readings.isNotEmpty()) {
                 readings.last().timestamp - session.startTime
             } else {

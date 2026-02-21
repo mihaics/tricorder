@@ -84,6 +84,9 @@ dependencies {
     // Navigation
     implementation(libs.navigation.compose)
 
+    // Room (for DatabaseModule)
+    implementation(libs.room.runtime)
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
