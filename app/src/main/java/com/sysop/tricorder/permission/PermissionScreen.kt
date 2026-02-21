@@ -55,20 +55,9 @@ fun PermissionScreen(
 
     val allGranted = permissionStates.values.all { it }
 
-    // Launcher for granting all permissions at once
-    val grantAllLauncher = rememberLauncherForActivityResult(
+    val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
-    ) { results ->
-        refreshPermissions()
-        if (permissionStates.values.all { it }) {
-            onAllGranted()
-        }
-    }
-
-    // Launcher for granting permissions per category
-    val categoryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-    ) { results ->
+    ) { _ ->
         refreshPermissions()
         if (permissionStates.values.all { it }) {
             onAllGranted()
@@ -107,7 +96,7 @@ fun PermissionScreen(
             item {
                 Button(
                     onClick = {
-                        grantAllLauncher.launch(PermissionManager.allPermissions().toTypedArray())
+                        permissionLauncher.launch(PermissionManager.allPermissions().toTypedArray())
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !allGranted,
@@ -136,7 +125,7 @@ fun PermissionScreen(
                     granted = granted,
                     onGrant = {
                         val permissions = PermissionManager.getPermissionsForCategory(category)
-                        categoryLauncher.launch(permissions.toTypedArray())
+                        permissionLauncher.launch(permissions.toTypedArray())
                     },
                 )
             }
