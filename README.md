@@ -178,4 +178,4 @@ When GPS is not yet available, the app defaults to Arad, Romania (46.1866, 21.31
 
 ## License
 
-Proprietary. All rights reserved.
+MIT License. See [LICENSE](LICENSE) for details.
