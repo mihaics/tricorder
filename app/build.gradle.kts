@@ -46,6 +46,7 @@ dependencies {
 
     // Feature modules
     implementation(project(":feature:map"))
+    implementation(project(":feature:detail"))
 
     // Sensor modules
     implementation(project(":sensor:motion"))
