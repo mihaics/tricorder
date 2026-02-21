@@ -90,6 +90,9 @@ dependencies {
     // MapLibre (for initialization in Application)
     implementation(libs.maplibre)
 
+    // Play Services Location (for passive location in Application)
+    implementation(libs.play.services.location)
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

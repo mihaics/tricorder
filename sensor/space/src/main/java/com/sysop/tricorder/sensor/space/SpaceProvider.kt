@@ -1,6 +1,7 @@
 package com.sysop.tricorder.sensor.space
 
 import com.sysop.tricorder.core.model.*
+import com.sysop.tricorder.core.sensorapi.DeviceLocation
 import com.sysop.tricorder.core.sensorapi.SensorProvider
 import com.sysop.tricorder.sensor.space.api.N2yoApi
 import kotlinx.coroutines.delay
@@ -11,6 +12,7 @@ import javax.inject.Inject
 
 class SpaceProvider @Inject constructor(
     private val api: N2yoApi,
+    private val deviceLocation: DeviceLocation,
 ) : SensorProvider {
 
     override val id = "space"
@@ -22,8 +24,14 @@ class SpaceProvider @Inject constructor(
     override fun readings(): Flow<SensorReading> = flow {
         while (true) {
             try {
+                if (!deviceLocation.isAvailable) {
+                    delay(5_000)
+                    continue
+                }
                 val response = api.getSatellitesAbove(
-                    latitude = 0.0, longitude = 0.0, apiKey = ""
+                    latitude = deviceLocation.lat,
+                    longitude = deviceLocation.lon,
+                    apiKey = "",
                 )
                 response.above?.forEach { sat ->
                     if (sat.satlat != null && sat.satlng != null) {

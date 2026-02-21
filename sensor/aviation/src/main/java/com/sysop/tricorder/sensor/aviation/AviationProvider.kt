@@ -1,6 +1,7 @@
 package com.sysop.tricorder.sensor.aviation
 
 import com.sysop.tricorder.core.model.*
+import com.sysop.tricorder.core.sensorapi.DeviceLocation
 import com.sysop.tricorder.core.sensorapi.SensorProvider
 import com.sysop.tricorder.sensor.aviation.api.OpenSkyApi
 import kotlinx.coroutines.delay
@@ -11,6 +12,7 @@ import javax.inject.Inject
 
 class AviationProvider @Inject constructor(
     private val api: OpenSkyApi,
+    private val deviceLocation: DeviceLocation,
 ) : SensorProvider {
 
     override val id = "aviation"
@@ -22,9 +24,17 @@ class AviationProvider @Inject constructor(
     override fun readings(): Flow<SensorReading> = flow {
         while (true) {
             try {
-                // Default bounding box (1 degree around 0,0 — will be updated by location)
+                if (!deviceLocation.isAvailable) {
+                    delay(5_000)
+                    continue
+                }
+                val lat = deviceLocation.lat
+                val lon = deviceLocation.lon
                 val response = api.getAircraftStates(
-                    latMin = -1.0, lonMin = -1.0, latMax = 1.0, lonMax = 1.0
+                    latMin = lat - 1.0,
+                    lonMin = lon - 1.0,
+                    latMax = lat + 1.0,
+                    lonMax = lon + 1.0,
                 )
                 response.states?.forEach { state ->
                     if (state.size >= 8) {

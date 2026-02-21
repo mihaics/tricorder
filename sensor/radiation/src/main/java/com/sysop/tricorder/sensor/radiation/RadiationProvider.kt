@@ -1,6 +1,7 @@
 package com.sysop.tricorder.sensor.radiation
 
 import com.sysop.tricorder.core.model.*
+import com.sysop.tricorder.core.sensorapi.DeviceLocation
 import com.sysop.tricorder.core.sensorapi.SensorProvider
 import com.sysop.tricorder.sensor.radiation.api.SafecastApi
 import kotlinx.coroutines.delay
@@ -11,6 +12,7 @@ import javax.inject.Inject
 
 class RadiationProvider @Inject constructor(
     private val api: SafecastApi,
+    private val deviceLocation: DeviceLocation,
 ) : SensorProvider {
 
     override val id = "radiation"
@@ -22,7 +24,14 @@ class RadiationProvider @Inject constructor(
     override fun readings(): Flow<SensorReading> = flow {
         while (true) {
             try {
-                val measurements = api.getMeasurements(latitude = 0.0, longitude = 0.0)
+                if (!deviceLocation.isAvailable) {
+                    delay(5_000)
+                    continue
+                }
+                val measurements = api.getMeasurements(
+                    latitude = deviceLocation.lat,
+                    longitude = deviceLocation.lon,
+                )
                 for (m in measurements) {
                     if (m.latitude != null && m.longitude != null && m.value != null) {
                         val isCpm = m.unit == "cpm"
@@ -33,7 +42,7 @@ class RadiationProvider @Inject constructor(
                             values = buildMap {
                                 if (isCpm) {
                                     put("cpm", m.value)
-                                    put("usv_h", m.value / 334.0) // approximate CPM to uSv/h
+                                    put("usv_h", m.value / 334.0)
                                 } else {
                                     put("usv_h", m.value)
                                 }

@@ -1,6 +1,7 @@
 package com.sysop.tricorder.sensor.weather
 
 import com.sysop.tricorder.core.model.*
+import com.sysop.tricorder.core.sensorapi.DeviceLocation
 import com.sysop.tricorder.core.sensorapi.SensorProvider
 import com.sysop.tricorder.sensor.weather.api.OpenMeteoApi
 import kotlinx.coroutines.delay
@@ -11,6 +12,7 @@ import javax.inject.Inject
 
 class WeatherProvider @Inject constructor(
     private val api: OpenMeteoApi,
+    private val deviceLocation: DeviceLocation,
 ) : SensorProvider {
 
     override val id = "weather"
@@ -22,8 +24,14 @@ class WeatherProvider @Inject constructor(
     override fun readings(): Flow<SensorReading> = flow {
         while (true) {
             try {
-                // Default location — will be updated by location provider
-                val response = api.getCurrentWeather(latitude = 0.0, longitude = 0.0)
+                if (!deviceLocation.isAvailable) {
+                    delay(5_000)
+                    continue
+                }
+                val response = api.getCurrentWeather(
+                    latitude = deviceLocation.lat,
+                    longitude = deviceLocation.lon,
+                )
                 val current = response.current
                 if (current != null) {
                     emit(SensorReading(
@@ -40,9 +48,7 @@ class WeatherProvider @Inject constructor(
                         },
                     ))
                 }
-            } catch (_: Exception) {
-                // Network error, retry on next cycle
-            }
+            } catch (_: Exception) {}
             delay(300_000) // 5 minutes
         }
     }

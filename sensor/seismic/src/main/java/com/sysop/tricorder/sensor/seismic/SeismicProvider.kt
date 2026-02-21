@@ -1,6 +1,7 @@
 package com.sysop.tricorder.sensor.seismic
 
 import com.sysop.tricorder.core.model.*
+import com.sysop.tricorder.core.sensorapi.DeviceLocation
 import com.sysop.tricorder.core.sensorapi.SensorProvider
 import com.sysop.tricorder.sensor.seismic.api.UsgsApi
 import kotlinx.coroutines.delay
@@ -12,6 +13,7 @@ import javax.inject.Inject
 
 class SeismicProvider @Inject constructor(
     private val api: UsgsApi,
+    private val deviceLocation: DeviceLocation,
 ) : SensorProvider {
 
     override val id = "seismic"
@@ -23,11 +25,15 @@ class SeismicProvider @Inject constructor(
     override fun readings(): Flow<SensorReading> = flow {
         while (true) {
             try {
+                if (!deviceLocation.isAvailable) {
+                    delay(5_000)
+                    continue
+                }
                 val sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS).toString().take(10)
                 val response = api.getEarthquakes(
                     startTime = sevenDaysAgo,
-                    latitude = 0.0,
-                    longitude = 0.0,
+                    latitude = deviceLocation.lat,
+                    longitude = deviceLocation.lon,
                 )
                 response.features?.forEach { feature ->
                     val props = feature.properties ?: return@forEach

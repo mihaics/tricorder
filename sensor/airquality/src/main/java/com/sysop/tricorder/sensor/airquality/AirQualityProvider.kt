@@ -1,6 +1,7 @@
 package com.sysop.tricorder.sensor.airquality
 
 import com.sysop.tricorder.core.model.*
+import com.sysop.tricorder.core.sensorapi.DeviceLocation
 import com.sysop.tricorder.core.sensorapi.SensorProvider
 import com.sysop.tricorder.sensor.airquality.api.WaqiApi
 import kotlinx.coroutines.delay
@@ -11,6 +12,7 @@ import javax.inject.Inject
 
 class AirQualityProvider @Inject constructor(
     private val api: WaqiApi,
+    private val deviceLocation: DeviceLocation,
 ) : SensorProvider {
 
     override val id = "air-quality"
@@ -22,7 +24,15 @@ class AirQualityProvider @Inject constructor(
     override fun readings(): Flow<SensorReading> = flow {
         while (true) {
             try {
-                val response = api.getAirQuality(lat = 0.0, lon = 0.0, token = "demo")
+                if (!deviceLocation.isAvailable) {
+                    delay(5_000)
+                    continue
+                }
+                val response = api.getAirQuality(
+                    lat = deviceLocation.lat,
+                    lon = deviceLocation.lon,
+                    token = "demo",
+                )
                 val data = response.data
                 if (data != null) {
                     emit(SensorReading(

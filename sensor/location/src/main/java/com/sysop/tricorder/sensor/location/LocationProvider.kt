@@ -10,6 +10,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.sysop.tricorder.core.model.*
+import com.sysop.tricorder.core.sensorapi.DeviceLocation
 import com.sysop.tricorder.core.sensorapi.SensorProvider
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +21,7 @@ import javax.inject.Inject
 class LocationProvider @Inject constructor(
     private val fusedLocationClient: FusedLocationProviderClient?,
     private val locationManager: LocationManager?,
+    private val deviceLocation: DeviceLocation,
 ) : SensorProvider {
 
     override val id = "location"
@@ -45,6 +47,7 @@ class LocationProvider @Inject constructor(
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val location = result.lastLocation ?: return
+                deviceLocation.update(location.latitude, location.longitude)
                 trySend(SensorReading(
                     providerId = id,
                     category = category,
