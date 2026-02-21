@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Tricorder"
 include(":app")
+include(":core:model")
