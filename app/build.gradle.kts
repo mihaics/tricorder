@@ -36,6 +36,33 @@ android {
 }
 
 dependencies {
+    // Core modules
+    implementation(project(":core:model"))
+    implementation(project(":core:sensor-api"))
+    implementation(project(":core:database"))
+    implementation(project(":core:network"))
+    implementation(project(":core:datastore"))
+    implementation(project(":core:ui-common"))
+
+    // Feature modules
+    implementation(project(":feature:map"))
+
+    // Sensor modules
+    implementation(project(":sensor:motion"))
+    implementation(project(":sensor:environment"))
+    implementation(project(":sensor:location"))
+    implementation(project(":sensor:rf"))
+    implementation(project(":sensor:audio"))
+    implementation(project(":sensor:camera"))
+    implementation(project(":sensor:weather"))
+    implementation(project(":sensor:airquality"))
+    implementation(project(":sensor:aviation"))
+    implementation(project(":sensor:seismic"))
+    implementation(project(":sensor:radiation"))
+    implementation(project(":sensor:space"))
+    implementation(project(":sensor:rfintel"))
+    implementation(project(":sensor:tides"))
+
     // Compose
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
