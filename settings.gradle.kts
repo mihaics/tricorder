@@ -17,3 +17,4 @@ rootProject.name = "Tricorder"
 include(":app")
 include(":core:model")
 include(":core:sensor-api")
+include(":core:database")
