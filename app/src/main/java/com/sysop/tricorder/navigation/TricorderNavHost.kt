@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.sysop.tricorder.core.model.SensorCategory
+import com.sysop.tricorder.feature.detail.airquality.AirQualityScreen
 import com.sysop.tricorder.feature.detail.audio.AudioSpectrumScreen
 import com.sysop.tricorder.feature.detail.aviation.AircraftTrackerScreen
 import com.sysop.tricorder.feature.detail.camera.CameraAnalysisScreen
@@ -19,6 +20,8 @@ import com.sysop.tricorder.feature.detail.environment.BarometerScreen
 import com.sysop.tricorder.feature.detail.gnss.GnssSkyPlotScreen
 import com.sysop.tricorder.feature.detail.motion.MotionScreen
 import com.sysop.tricorder.feature.detail.rf.RfScannerScreen
+import com.sysop.tricorder.feature.detail.seismic.SeismicScreen
+import com.sysop.tricorder.feature.detail.weather.WeatherScreen
 import com.sysop.tricorder.permission.PermissionManager
 import com.sysop.tricorder.feature.map.MapScreen
 import com.sysop.tricorder.feature.session.list.SessionListScreen
@@ -80,10 +83,10 @@ fun TricorderNavHost(
                 SensorCategory.AUDIO -> AudioSpectrumScreen(onBack = onBack)
                 SensorCategory.CAMERA -> CameraAnalysisScreen(onBack = onBack)
                 SensorCategory.AVIATION -> AircraftTrackerScreen(onBack = onBack)
+                SensorCategory.WEATHER -> WeatherScreen(onBack = onBack)
+                SensorCategory.AIR_QUALITY -> AirQualityScreen(onBack = onBack)
+                SensorCategory.SEISMIC -> SeismicScreen(onBack = onBack)
                 // Categories without dedicated detail views show compass as fallback
-                SensorCategory.WEATHER,
-                SensorCategory.AIR_QUALITY,
-                SensorCategory.SEISMIC,
                 SensorCategory.RADIATION,
                 SensorCategory.SPACE,
                 SensorCategory.TIDES -> CompassScreen(onBack = onBack)
