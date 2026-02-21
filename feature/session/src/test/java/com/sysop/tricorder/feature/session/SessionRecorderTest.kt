@@ -65,16 +65,6 @@ class SessionRecorderTest {
         sessionDao = mockk(relaxed = true)
         moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
 
-        coEvery { sessionDao.insertSession(capture(slot<SessionEntity>().also { slot ->
-            coEvery { sessionDao.insertSession(any()) } coAnswers {
-                insertedSessions.add(firstArg())
-            }
-        })) } coAnswers { insertedSessions.add(firstArg()) }
-
-        // Re-setup with simpler approach
-        insertedSessions.clear()
-        insertedReadings.clear()
-
         coEvery { sessionDao.insertSession(any()) } coAnswers {
             insertedSessions.add(firstArg())
         }

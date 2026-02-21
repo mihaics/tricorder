@@ -33,4 +33,7 @@ interface SessionDao {
 
     @Query("DELETE FROM sessions WHERE startTime < :before")
     suspend fun deleteSessionsBefore(before: Long)
+
+    @Query("SELECT COUNT(*) FROM readings WHERE sessionId = :sessionId")
+    suspend fun getReadingCount(sessionId: String): Int
 }

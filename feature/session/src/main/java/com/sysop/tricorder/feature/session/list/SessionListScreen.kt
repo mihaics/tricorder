@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -78,7 +79,7 @@ fun SessionListScreen(
         floatingActionButton = {
             if (sessions.isNotEmpty()) {
                 FloatingActionButton(
-                    onClick = { sessions.firstOrNull()?.let(onExport) },
+                    onClick = { sessions.firstOrNull()?.session?.let(onExport) },
                     containerColor = AccentGreen,
                     contentColor = MaterialTheme.colorScheme.background,
                 ) {
@@ -112,12 +113,13 @@ fun SessionListScreen(
                 item { Spacer(modifier = Modifier.height(8.dp)) }
                 items(
                     items = sessions,
-                    key = { it.id },
-                ) { session ->
+                    key = { it.session.id },
+                ) { sessionWithCount ->
                     SwipeToDismissSessionCard(
-                        session = session,
-                        onClick = { onSessionClick(session.id) },
-                        onDismiss = { viewModel.deleteSession(session) },
+                        session = sessionWithCount.session,
+                        readingCount = sessionWithCount.readingCount,
+                        onClick = { onSessionClick(sessionWithCount.session.id) },
+                        onDismiss = { viewModel.deleteSession(sessionWithCount.session) },
                     )
                 }
                 item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -130,6 +132,7 @@ fun SessionListScreen(
 @Composable
 private fun SwipeToDismissSessionCard(
     session: SessionEntity,
+    readingCount: Int,
     onClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -170,13 +173,14 @@ private fun SwipeToDismissSessionCard(
         },
         enableDismissFromStartToEnd = false,
     ) {
-        SessionCard(session = session, onClick = onClick)
+        SessionCard(session = session, readingCount = readingCount, onClick = onClick)
     }
 }
 
 @Composable
 private fun SessionCard(
     session: SessionEntity,
+    readingCount: Int,
     onClick: () -> Unit,
 ) {
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
@@ -237,16 +241,32 @@ private fun SessionCard(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.LocationOn,
+                        Icons.Default.Sensors,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "%.4f, %.4f".format(session.latitude, session.longitude),
+                        text = "$readingCount readings",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "%.4f, %.4f".format(session.latitude, session.longitude),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                )
             }
 
             if (session.activeProviders.isNotBlank()) {
