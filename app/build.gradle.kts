@@ -44,6 +44,9 @@ dependencies {
     implementation(libs.compose.icons.extended)
     debugImplementation(libs.compose.tooling)
 
+    // Activity
+    implementation(libs.activity.compose)
+
     // Lifecycle
     implementation(libs.lifecycle.runtime)
     implementation(libs.lifecycle.viewmodel)
