@@ -8,7 +8,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.sysop.tricorder.core.model.SensorCategory
+import com.sysop.tricorder.feature.detail.audio.AudioSpectrumScreen
+import com.sysop.tricorder.feature.detail.aviation.AircraftTrackerScreen
+import com.sysop.tricorder.feature.detail.camera.CameraAnalysisScreen
+import com.sysop.tricorder.feature.detail.compass.CompassScreen
+import com.sysop.tricorder.feature.detail.environment.BarometerScreen
+import com.sysop.tricorder.feature.detail.gnss.GnssSkyPlotScreen
+import com.sysop.tricorder.feature.detail.motion.MotionScreen
+import com.sysop.tricorder.feature.detail.rf.RfScannerScreen
 import com.sysop.tricorder.feature.map.MapScreen
+import com.sysop.tricorder.feature.session.list.SessionListScreen
+import com.sysop.tricorder.feature.session.replay.SessionReplayScreen
+import com.sysop.tricorder.feature.settings.SettingsScreen
 
 @Composable
 fun TricorderNavHost(
@@ -38,24 +49,48 @@ fun TricorderNavHost(
         ) { backStackEntry ->
             val categoryName = backStackEntry.arguments?.getString("category") ?: return@composable
             val category = SensorCategory.valueOf(categoryName)
-            // Detail views will be added in Phase 7
-            // For now, placeholder
-            androidx.compose.material3.Text("Detail: ${category.displayName}")
+            val onBack = { navController.popBackStack(); Unit }
+
+            when (category) {
+                SensorCategory.MOTION -> MotionScreen(onBack = onBack)
+                SensorCategory.ENVIRONMENT -> BarometerScreen(onBack = onBack)
+                SensorCategory.LOCATION -> GnssSkyPlotScreen(onBack = onBack)
+                SensorCategory.RF -> RfScannerScreen(onBack = onBack)
+                SensorCategory.AUDIO -> AudioSpectrumScreen(onBack = onBack)
+                SensorCategory.CAMERA -> CameraAnalysisScreen(onBack = onBack)
+                SensorCategory.AVIATION -> AircraftTrackerScreen(onBack = onBack)
+                // Categories without dedicated detail views show compass as fallback
+                SensorCategory.WEATHER,
+                SensorCategory.AIR_QUALITY,
+                SensorCategory.SEISMIC,
+                SensorCategory.RADIATION,
+                SensorCategory.SPACE,
+                SensorCategory.TIDES -> CompassScreen(onBack = onBack)
+            }
         }
 
         composable(Screen.Sessions.route) {
-            androidx.compose.material3.Text("Sessions")
+            SessionListScreen(
+                onBack = { navController.popBackStack() },
+                onSessionClick = { sessionId ->
+                    navController.navigate("session_replay/$sessionId")
+                },
+            )
         }
 
         composable(
             route = Screen.SESSION_REPLAY_ROUTE,
             arguments = listOf(navArgument("sessionId") { type = NavType.StringType }),
         ) {
-            androidx.compose.material3.Text("Session Replay")
+            SessionReplayScreen(
+                onBack = { navController.popBackStack() },
+            )
         }
 
         composable(Screen.Settings.route) {
-            androidx.compose.material3.Text("Settings")
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+            )
         }
     }
 }
