@@ -19,6 +19,7 @@ junit = "4.13.2"
 truth = "1.4.4"
 turbine = "1.2.0"
 mockk = "1.13.13"
+play-services-location = "21.3.0"
 
 [libraries]
 # Compose
@@ -67,6 +68,9 @@ camerax-core = { group = "androidx.camera", name = "camera-core", version.ref = 
 camerax-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 camerax-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+
+# Play Services
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "play-services-location" }
 
 # DataStore
 datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
