@@ -9,6 +9,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
 
 @Module
@@ -21,7 +22,7 @@ object SessionModule {
         sensorRegistry: SensorRegistry,
         sessionDao: SessionDao,
         moshi: Moshi,
-    ): SessionRecorder = SessionRecorder(sensorRegistry, sessionDao, moshi)
+    ): SessionRecorder = SessionRecorder(sensorRegistry, sessionDao, moshi, Dispatchers.Default)
 
     @Provides
     @Singleton

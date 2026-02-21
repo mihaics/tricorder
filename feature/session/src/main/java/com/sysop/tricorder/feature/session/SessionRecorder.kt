@@ -8,6 +8,7 @@ import com.sysop.tricorder.core.database.entity.SessionEntity
 import com.sysop.tricorder.core.model.SensorReading
 import com.sysop.tricorder.core.model.Session
 import com.sysop.tricorder.core.sensorapi.SensorRegistry
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,12 +24,16 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 
 class SessionRecorder(
     private val sensorRegistry: SensorRegistry,
     private val sessionDao: SessionDao,
     private val moshi: Moshi,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
+
+    private val recording = AtomicBoolean(false)
 
     private val _isRecording = MutableStateFlow(false)
     val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
@@ -58,7 +63,7 @@ class SessionRecorder(
         longitude: Double,
         activeProviderIds: List<String>,
     ) {
-        if (_isRecording.value) return
+        if (!recording.compareAndSet(false, true)) return
 
         val session = Session(
             id = UUID.randomUUID(),
@@ -79,7 +84,7 @@ class SessionRecorder(
             activeProviders = activeProviderIds.joinToString(","),
         )
 
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val scope = CoroutineScope(SupervisorJob() + dispatcher)
         recordingScope = scope
 
         scope.launch {
@@ -121,14 +126,20 @@ class SessionRecorder(
     }
 
     suspend fun stopRecording(): Session? {
-        if (!_isRecording.value) return null
+        if (!recording.compareAndSet(true, false)) return null
 
         val session = _currentSession.value ?: return null
         val endTime = Instant.now()
 
         _isRecording.value = false
 
-        // Flush remaining readings
+        // Cancel collection first so no new readings arrive
+        timerJob?.cancel()
+        timerJob = null
+        recordingScope?.cancel()
+        recordingScope = null
+
+        // Then flush whatever remains in the buffer
         flushBuffer()
 
         // Update session with end time
@@ -144,11 +155,6 @@ class SessionRecorder(
         )
         sessionDao.updateSession(entity)
 
-        // Clean up
-        timerJob?.cancel()
-        timerJob = null
-        recordingScope?.cancel()
-        recordingScope = null
         _currentSession.value = null
         _elapsed.value = Duration.ZERO
 

@@ -88,13 +88,13 @@ class SessionReplayViewModel @Inject constructor(
         val session = currentState.session ?: return
         val absoluteTime = session.startTime + targetMs
 
-        val visible = currentState.allReadings.filter { it.timestamp <= absoluteTime }
+        val cutoff = findCutoffIndex(currentState.allReadings, absoluteTime)
 
         _state.update {
             it.copy(
                 currentTimeMs = targetMs,
                 progress = progress,
-                visibleReadings = visible,
+                visibleReadings = currentState.allReadings.subList(0, cutoff),
             )
         }
     }
@@ -123,19 +123,38 @@ class SessionReplayViewModel @Inject constructor(
 
                 val session = current.session ?: break
                 val absoluteTime = session.startTime + newTimeMs
-                val visible = current.allReadings.filter { it.timestamp <= absoluteTime }
+                val cutoff = findCutoffIndex(current.allReadings, absoluteTime)
 
                 _state.update {
                     it.copy(
                         currentTimeMs = newTimeMs,
                         progress = newProgress,
-                        visibleReadings = visible,
+                        visibleReadings = current.allReadings.subList(0, cutoff),
                     )
                 }
 
                 delay(tickInterval)
             }
         }
+    }
+
+    /**
+     * Binary search to find the index of the first reading after [timestampMs].
+     * Returns the number of readings at or before the given timestamp.
+     * Readings are assumed sorted by timestamp (ASC from Room query).
+     */
+    private fun findCutoffIndex(readings: List<ReadingEntity>, timestampMs: Long): Int {
+        var low = 0
+        var high = readings.size
+        while (low < high) {
+            val mid = (low + high) ushr 1
+            if (readings[mid].timestamp <= timestampMs) {
+                low = mid + 1
+            } else {
+                high = mid
+            }
+        }
+        return low
     }
 
     private fun pause() {

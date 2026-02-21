@@ -15,15 +15,18 @@ import com.sysop.tricorder.core.sensorapi.SensorRegistry
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.slot
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import java.time.Instant
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SessionRecorderTest {
 
     private lateinit var sessionDao: SessionDao
@@ -79,11 +82,15 @@ class SessionRecorderTest {
         }
 
         sensorRegistry = SensorRegistry(setOf(fakeProvider))
-        recorder = SessionRecorder(sensorRegistry, sessionDao, moshi)
     }
+
+    private fun createRecorder(dispatcher: kotlinx.coroutines.CoroutineDispatcher) =
+        SessionRecorder(sensorRegistry, sessionDao, moshi, dispatcher)
 
     @Test
     fun `startRecording sets isRecording to true`() = runTest {
+        recorder = createRecorder(UnconfinedTestDispatcher(testScheduler))
+
         assertThat(recorder.isRecording.value).isFalse()
 
         recorder.startRecording(
@@ -97,12 +104,13 @@ class SessionRecorderTest {
         assertThat(recorder.currentSession.value).isNotNull()
         assertThat(recorder.currentSession.value!!.name).isEqualTo("Test Session")
 
-        // Clean up
         recorder.stopRecording()
     }
 
     @Test
     fun `startRecording creates session entity in database`() = runTest {
+        recorder = createRecorder(UnconfinedTestDispatcher(testScheduler))
+
         recorder.startRecording(
             name = "DB Session",
             latitude = 47.3769,
@@ -110,8 +118,7 @@ class SessionRecorderTest {
             activeProviderIds = listOf("test-sensor"),
         )
 
-        // Give the coroutine time to insert
-        delay(200)
+        advanceTimeBy(200)
 
         assertThat(insertedSessions).isNotEmpty()
         val entity = insertedSessions.first()
@@ -126,6 +133,8 @@ class SessionRecorderTest {
 
     @Test
     fun `readings get buffered and batch inserted`() = runTest {
+        recorder = createRecorder(UnconfinedTestDispatcher(testScheduler))
+
         recorder.startRecording(
             name = "Buffer Test",
             latitude = 47.0,
@@ -133,8 +142,8 @@ class SessionRecorderTest {
             activeProviderIds = listOf("test-sensor"),
         )
 
-        // Wait for readings to be collected and flushed (>1 second for buffer flush)
-        delay(1_500)
+        // Advance past buffer flush interval (1 second)
+        advanceTimeBy(1_500)
 
         recorder.stopRecording()
 
@@ -147,6 +156,8 @@ class SessionRecorderTest {
 
     @Test
     fun `stopRecording sets endTime and returns session`() = runTest {
+        recorder = createRecorder(UnconfinedTestDispatcher(testScheduler))
+
         recorder.startRecording(
             name = "Stop Test",
             latitude = 47.0,
@@ -154,7 +165,7 @@ class SessionRecorderTest {
             activeProviderIds = listOf("test-sensor"),
         )
 
-        delay(200)
+        advanceTimeBy(200)
 
         val session = recorder.stopRecording()
 
@@ -169,12 +180,15 @@ class SessionRecorderTest {
 
     @Test
     fun `stopRecording when not recording returns null`() = runTest {
+        recorder = createRecorder(UnconfinedTestDispatcher(testScheduler))
         val result = recorder.stopRecording()
         assertThat(result).isNull()
     }
 
     @Test
     fun `startRecording while already recording is ignored`() = runTest {
+        recorder = createRecorder(UnconfinedTestDispatcher(testScheduler))
+
         recorder.startRecording(
             name = "First",
             latitude = 47.0,
@@ -197,6 +211,8 @@ class SessionRecorderTest {
 
     @Test
     fun `reading values are serialized to JSON`() = runTest {
+        recorder = createRecorder(UnconfinedTestDispatcher(testScheduler))
+
         recorder.startRecording(
             name = "JSON Test",
             latitude = 47.0,
@@ -204,7 +220,7 @@ class SessionRecorderTest {
             activeProviderIds = listOf("test-sensor"),
         )
 
-        delay(1_500)
+        advanceTimeBy(1_500)
         recorder.stopRecording()
 
         assertThat(insertedReadings).isNotEmpty()

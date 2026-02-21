@@ -60,7 +60,11 @@ class RecordingService : Service() {
     }
 
     override fun onDestroy() {
-        serviceScope.cancel()
+        serviceScope.launch {
+            sessionRecorder.stopRecording()
+        }.invokeOnCompletion {
+            serviceScope.cancel()
+        }
         super.onDestroy()
     }
 
