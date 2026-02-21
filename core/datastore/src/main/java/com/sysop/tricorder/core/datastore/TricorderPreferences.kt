@@ -18,11 +18,20 @@ class TricorderPreferences @Inject constructor(
 ) {
     private object Keys {
         val OPENWEATHERMAP_KEY = stringPreferencesKey("openweathermap_api_key")
+        val WAQI_KEY = stringPreferencesKey("waqi_api_key")
+        val N2YO_KEY = stringPreferencesKey("n2yo_api_key")
+        val OPENCELLID_KEY = stringPreferencesKey("opencellid_api_key")
         val SESSION_RETENTION_DAYS = intPreferencesKey("session_retention_days")
         val DEFAULT_SAMPLE_RATE_MS = longPreferencesKey("default_sample_rate_ms")
     }
 
     val openWeatherMapKey: Flow<String> = context.dataStore.data.map { it[Keys.OPENWEATHERMAP_KEY] ?: "" }
+
+    val waqiKey: Flow<String> = context.dataStore.data.map { it[Keys.WAQI_KEY] ?: "" }
+
+    val n2yoKey: Flow<String> = context.dataStore.data.map { it[Keys.N2YO_KEY] ?: "" }
+
+    val openCellIdKey: Flow<String> = context.dataStore.data.map { it[Keys.OPENCELLID_KEY] ?: "" }
 
     val sessionRetentionDays: Flow<Int> = context.dataStore.data.map { it[Keys.SESSION_RETENTION_DAYS] ?: 30 }
 
@@ -30,6 +39,18 @@ class TricorderPreferences @Inject constructor(
 
     suspend fun setOpenWeatherMapKey(key: String) {
         context.dataStore.edit { it[Keys.OPENWEATHERMAP_KEY] = key }
+    }
+
+    suspend fun setWaqiKey(key: String) {
+        context.dataStore.edit { it[Keys.WAQI_KEY] = key }
+    }
+
+    suspend fun setN2yoKey(key: String) {
+        context.dataStore.edit { it[Keys.N2YO_KEY] = key }
+    }
+
+    suspend fun setOpenCellIdKey(key: String) {
+        context.dataStore.edit { it[Keys.OPENCELLID_KEY] = key }
     }
 
     suspend fun setSessionRetentionDays(days: Int) {
